@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Plan Interactif - Mobilités R.L.</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #f5f5f5;
+    }
+    #controls {
+      margin-bottom: 20px;
+    }
+    #map-container {
+      position: relative;
+      display: inline-block;
+    }
+    #info-box {
+      margin-top: 20px;
+      padding: 10px;
+      background: #fff;
+      border: 1px solid #ccc;
+      display: none;
+    }
+    input, select {
+      padding: 5px;
+      font-size: 14px;
+    }
+    datalist option {
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Plan Interactif - Mobilités R.L.</h1>
+
+  <div id="controls">
+    <input list="station-suggestions" type="text" id="search" placeholder="Rechercher une station...">
+    <datalist id="station-suggestions"></datalist>
+
+    <select id="line-filter">
+      <option value="all">Toutes les lignes</option>
+      <optgroup label="Tram">
+        <option value="T1">T1</option>
+        <option value="T2">T2</option>
+      </optgroup>
+      <optgroup label="Métro">
+        <option value="M1">M1</option>
+        <option value="M3">M3</option>
+      </optgroup>
+      <optgroup label="Bus">
+        <option value="102">102</option>
+        <option value="106">106</option>
+        <option value="107">107</option>
+        <option value="109">109</option>
+        <option value="110">110</option>
+      </optgroup>
+    </select>
+  </div>
+
+  <div id="map-container">
+    <img src="plan.jpeg" alt="Plan TAB" usemap="#stations">
+    <map name="stations" id="stations-map"></map>
+  </div>
+  <div id="info-box"></div>
+
+  <script>
+    const stations = [
+      { name: "Comédie", coords: [780, 580, 10], lines: ["T1", "T2", "M1", "M3", "102"] },
+      { name: "Corum", coords: [750, 520, 10], lines: ["T1", "102"] },
+      { name: "Gare St-Michel", coords: [790, 650, 10], lines: ["T1", "106", "109", "110"] },
+      { name: "St-Eloi", coords: [900, 710, 10], lines: ["M3", "106"] },
+      { name: "Charles de Gaulle", coords: [780, 940, 10], lines: ["M3", "102"] },
+      { name: "Notre-Dame de Briquenbourg", coords: [800, 1030, 10], lines: ["M3"] },
+      { name: "Aéroport international du sponsor", coords: [850, 1110, 10], lines: ["M3"] },
+      { name: "Millénaire", coords: [280, 250, 10], lines: ["102"] },
+      { name: "Mosson", coords: [1020, 670, 10], lines: ["T2", "M3"] },
+      { name: "Nouveau St-Michel", coords: [870, 630, 10], lines: ["M3", "106"] }
+    ];
+
+    const map = document.getElementById('stations-map');
+    const infoBox = document.getElementById('info-box');
+    const lineFilter = document.getElementById('line-filter');
+    const searchInput = document.getElementById('search');
+    const datalist = document.getElementById('station-suggestions');
+
+    function renderSuggestions() {
+      datalist.innerHTML = "";
+      stations.forEach(station => {
+        const option = document.createElement("option");
+        option.value = station.name;
+        datalist.appendChild(option);
+      });
+    }
+
+    function renderStations(filterLine = "all", searchTerm = "") {
+      map.innerHTML = "";
+      infoBox.style.display = "none";
+      const searchLower = searchTerm.toLowerCase();
+      stations.forEach(station => {
+        const matchLine = (filterLine === "all" || station.lines.includes(filterLine));
+        const matchSearch = station.name.toLowerCase().includes(searchLower);
+
+        if (matchLine && matchSearch) {
+          const area = document.createElement('area');
+          area.shape = 'circle';
+          area.coords = station.coords.join(',');
+          area.href = '#';
+          area.alt = station.name;
+
+          if (station.name.toLowerCase() === searchLower) {
+            area.setAttribute("style", "outline: 2px solid red;");
+          }
+
+          area.addEventListener('click', (e) => {
+            e.preventDefault();
+            infoBox.innerHTML = `<h2>${station.name}</h2><p>Lignes : ${station.lines.join(', ')}</p>`;
+            infoBox.style.display = 'block';
+          });
+
+          map.appendChild(area);
+        }
+      });
+    }
+
+    lineFilter.addEventListener('change', () => {
+      renderStations(lineFilter.value, searchInput.value);
+    });
+
+    searchInput.addEventListener('input', () => {
+      renderStations(lineFilter.value, searchInput.value);
+    });
+
+    renderSuggestions();
+    renderStations();
+  </script>
+</body>
+</html>
